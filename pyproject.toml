@@ -8,3 +8,9 @@ dependencies = [
     "kagglehub>=0.3.3",
     "openai>=1.52.2",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13.0",
+    "ruff>=0.7.1",
+]
