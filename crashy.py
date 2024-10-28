@@ -7,6 +7,8 @@ import streamlit as st
 from openai import OpenAI
 from pydantic import BaseModel
 
+import pdfkit
+
 client = OpenAI()
 st.title("Crashy App")
 
@@ -25,70 +27,57 @@ class AccidentReport(BaseModel):
 
 
 prompt = """
-Sie sind ein hilfreicher Assistent für Autounfälle namens "crashy". Ihre Aufgabe ist es, einen umfassenden Schadensbericht basierend auf den bereitgestellten Fahrzeugbildern zu erstellen. Nutzen Sie alle bereitgestellten Bilder und fordern Sie bei Bedarf zusätzliche Bilder oder Details an, um eine genaue Bewertung vornehmen zu können. Beschreiben Sie ausschließlich die sichtbaren Schäden auf den Bildern und vermeiden Sie es, zusätzliche Informationen einzubeziehen.
+    Sie sind ein hilfreicher Assistent für Autounfälle namens "crashy". Ihre Aufgabe
+    ist es,
+    einen umfassenden Schadensbericht basierend auf den bereitgestellten Fahrzeugbildern
+    auf Deutsch zu
+    erstellen. Nutzen Sie alle bereitgestellten Bilder und fordern Sie bei Bedarf
+    zusätzliche
+    Bilder oder Details an, um eine genaue Bewertung vornehmen zu können. Beschreiben
+    Sie
+    ausschließlich die sichtbaren Schäden auf den Bildern und vermeiden Sie es,
+    zusätzliche
+    Informationen einzubeziehen.
 
-Folgende Angaben müssen im Bericht enthalten sein:
+    Folgende Angaben müssen im Bericht enthalten sein:
 
-1. **Fahrzeug vorhanden**:
-   - Bestätigen Sie, dass das Fahrzeug auf den Bildern vollständig sichtbar ist.
-   - **Erforderlich**: Ja
+    1. **Fahrzeug vorhanden**:
+    - Bestätigen Sie, dass das Fahrzeug auf den Bildern vollständig sichtbar ist.
+    - **Erforderlich**: Ja
 
-2. **Erkannter Schaden**:
-   - Bestätigen Sie, dass Schäden am Fahrzeug erkennbar sind.
-   - **Erforderlich**: Ja
+    2. **Erkannter Schaden**:
+    - Bestätigen Sie, dass Schäden am Fahrzeug erkennbar sind.
+    - **Erforderlich**: Ja
 
-3. **Vollständige Sichtbarkeit des Schadens**:
-   - Bestätigen Sie, dass der Schaden vollständig auf den Bildern sichtbar ist.
-   - **Erforderlich**: Ja
+    3. **Vollständige Sichtbarkeit des Schadens**:
+    - Bestätigen Sie, dass der Schaden vollständig auf den Bildern sichtbar ist.
+    - **Erforderlich**: Ja
 
-4. **Schweregrad des Schadens**:
-   - Bewerten Sie den Schaden als niedrig, mittel oder hoch.
-   - **Erforderlich**: Ja
+    4. **Schweregrad des Schadens**:
+    - Bewerten Sie den Schaden als niedrig, mittel oder hoch.
+    - **Erforderlich**: Ja
 
-5. **Schadensort am Fahrzeug**:
-   - Geben Sie an, wo sich der Schaden am Fahrzeug befindet (z.B. Front, Heck, Seiten, Dach).
-   - **Erforderlich**: Ja
+    5. **Schadensort am Fahrzeug**:
+    - Geben Sie an, wo sich der Schaden am Fahrzeug befindet (z.B. Front, Heck, Seiten,
+    Dach).
+    - **Erforderlich**: Ja
 
-6. **Brandgefahr**:
-   - Bestätigen Sie, ob Anzeichen von Brand vorhanden sind (Ja/Nein).
-   - **Erforderlich**: Ja
+    6. **Brandgefahr**:
+    - Bestätigen Sie, ob Anzeichen von Brand vorhanden sind (Ja/Nein).
+    - **Erforderlich**: Nein
 
-7. **Kennzeichen**:
-   - Erfassen Sie das Kennzeichen nur, wenn es klar lesbar und vollständig erkennbar ist.
-   - Wenn das Kennzeichen nicht zu 100% sichtbar ist, geben Sie `None` an.
+    7. **Kennzeichen**:
+    - Erfassen Sie das Kennzeichen nur, wenn es klar lesbar und vollständig
+    erkennbar ist und jedes Zeichen zu 100% sichtbar ist.
+    - Wenn das Kennzeichen nicht zu 100% sichtbar ist, geben Sie `None` an.
 
-8. **Zusätzliche Details**:
-   - Fügen Sie eine detaillierte Beschreibung der sichtbaren Schäden hinzu, einschließlich der betroffenen Fahrzeugteile und der Art des Schadens (z.B. Dellen, Kratzer, gebrochene Spiegel).
+    8. **Zusätzliche Details**:
+    - Fügen Sie eine detaillierte Beschreibung der sichtbaren Schäden hinzu,
+        einschließlich
+    der betroffenen Fahrzeugteile und der Art des Schadens
+    (z.B. Dellen, Kratzer, gebrochene Spiegel).
 
-**Ausgabeformat**:
-Nutzen Sie das folgende Pydantic-Modell, um Ihre Antwort zu strukturieren:
-
-```python
-from pydantic import BaseModel
-from typing import Optional
-
-class AccidentReport(BaseModel):
-    car_present: bool
-    damage_recognized: bool
-    damage_fully_visible: bool
-    damage_severity: str  # 'low', 'medium', 'high'
-    damage_location: str  # z.B. 'Front', 'Heck', 'Seiten', 'Dach'
-    fire_present: bool
-    license_plate_number: Optional[str]
-    detailed_damage_description: str
-
-{
-    "car_present": true,
-    "damage_recognized": true,
-    "damage_fully_visible": true,
-    "damage_severity": "medium",
-    "damage_location": "Front",
-    "fire_present": false,
-    "license_plate_number": "AB123CD",
-    "detailed_damage_description": "Die Frontstoßstange ist stark verbeult, der vordere Stoßfänger ist gebrochen und der Motorraum weist Anzeichen von Ölverlust auf."
-}
-
-"""  # noqa: E501
+    """
 
 
 uploaded_file = st.file_uploader(
@@ -96,7 +85,7 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file is not None:
-    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
+    st.image(uploaded_file, caption="Ihr Foto", use_column_width=True)
     st.write("")
     st.write("Analyisere...")
 
@@ -146,17 +135,43 @@ if uploaded_file is not None:
                 "Das Auto ist nicht sichtbar. "
                 "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch."
             )
+            st.stop()
         if not final_resp.damage_recognized:
             st.write(
                 "Kein Schaden erkannt. "
                 "Bitte laden Sie ein Bild mit sichtbarem Schaden hoch."
             )
+            st.stop()
         if not final_resp.damage_fully_visible:
             st.write(
                 "Schaden nicht vollständig sichtbar. "
                 "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch."
             )
+            st.stop()
         if final_resp.fire_present:
             st.warning("Brandgefahr!")
+            st.stop()
         if final_resp.damage_severity == "high":
             st.warning("Hoher Schaden!")
+            st.stop()
+
+        st.write("Schadensbericht:")
+
+        @st.fragment
+        def footer():
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.text_input("Name", placeholder="Ihr Name")
+                st.text_input("Telefonnummer", placeholder="Ihre Telefonnummer")
+                st.text_input("E-Mail-Adresse", placeholder="Ihre E-Mail-Adresse")
+                st.text_area("Anschrift", placeholder="Ihre Anschrift")
+            with col2:
+                st.text_input("Schweregrad des Schadens", final_resp.damage_severity)
+                st.text_input("Schadensort am Fahrzeug", final_resp.damage_location)
+                st.text_input("Kennzeichen", final_resp.license_plate_number)
+                st.text_area("Zusätzliche Details", final_resp.detailed_damage_description)
+            st.write("Bitte überprüfen Sie die Angaben.")
+            if st.button("Schaden melden"):
+                ...
+        footer()
