@@ -1,0 +1,8 @@
+*.png
+*.jpg
+*.jpeg
+.env
+.venv
+.ruff_cache
+.vscode
+.python-version
