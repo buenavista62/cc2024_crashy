@@ -5,7 +5,7 @@ lint:
 	uv run ruff check .
 
 run:
-	uv run python3 trial.py
+	uv run streamlit run crashy.py
 
 mypy:
 	uv run mypy .
