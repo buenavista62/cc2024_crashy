@@ -1,16 +1,10 @@
-[tool.poetry]
+[project]
 name = "codecamp2024"
 version = "0.1.0"
-description = ""
-authors = ["Patrick Ritter <patrick.ritter@epost.ch>"]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-openai = "^1.52.2"
-kagglehub = "^0.3.3"
-
-[tool.poetry.dev-dependencies]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "kagglehub>=0.3.3",
+    "openai>=1.52.2",
+]
