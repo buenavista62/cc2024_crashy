@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 
+"""Program to play with image LLMs."""
+
 import base64
-from openai import OpenAI
-import kagglehub
+import logging
 from pathlib import Path
+
+import kagglehub
+from openai import OpenAI
 from pydantic import BaseModel
 
 client = OpenAI()
 
 
 class AccidentReport(BaseModel):
+    """An accident report model."""
+
     damage_recognized: bool
     detailed_damage_description: str
     car_plate_numbers: list[str]
@@ -22,8 +28,8 @@ Only describe damage specific details of the pictures.
 """
 
 
-# assert kaggle image data is cached
 def get_dataset() -> list[Path]:
+    """Assert kaggle image data is cached."""
     path = kagglehub.dataset_download("humansintheloop/car-parts-and-car-damages")
     base = Path(path) / "Car damages dataset" / "File1" / "img"
     return [
@@ -34,9 +40,9 @@ def get_dataset() -> list[Path]:
     ]
 
 
-# Function to encode the image
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
+def encode_image(image_path: Path) -> str:
+    """Encode the given image."""
+    with image_path.open("rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
@@ -70,5 +76,4 @@ for image_path in get_dataset():
         temperature=0.2,
     )
 
-    print(response.choices[0])
-    print("")
+    logging.info(response.choices[0])
