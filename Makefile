@@ -6,3 +6,6 @@ lint:
 
 run:
 	uv run python3 trial.py
+
+mypy:
+	uv run mypy .
