@@ -7,7 +7,6 @@ import streamlit as st
 from openai import OpenAI
 from pydantic import BaseModel
 
-import pdfkit
 
 client = OpenAI()
 st.title("Crashy App")
@@ -24,6 +23,8 @@ class AccidentReport(BaseModel):
     fire_present: bool
     license_plate_number: Optional[str]  # noqa: UP007
     detailed_damage_description: str
+    number_of_valid_images: int
+    number_of_unique_vehicles: int
 
 
 prompt = """
@@ -55,12 +56,12 @@ prompt = """
 
     4. **Schweregrad des Schadens**:
     - Bewerten Sie den Schaden als niedrig, mittel oder hoch.
-    - **Erforderlich**: Ja
+    - **Erforderlich**: Nein
 
     5. **Schadensort am Fahrzeug**:
     - Geben Sie an, wo sich der Schaden am Fahrzeug befindet (z.B. Front, Heck, Seiten,
     Dach).
-    - **Erforderlich**: Ja
+    - **Erforderlich**: Nein
 
     6. **Brandgefahr**:
     - Bestätigen Sie, ob Anzeichen von Brand vorhanden sind (Ja/Nein).
@@ -70,6 +71,7 @@ prompt = """
     - Erfassen Sie das Kennzeichen nur, wenn es klar lesbar und vollständig
     erkennbar ist und jedes Zeichen zu 100% sichtbar ist.
     - Wenn das Kennzeichen nicht zu 100% sichtbar ist, geben Sie `None` an.
+    - **Erforderlich**: Nein
 
     8. **Zusätzliche Details**:
     - Fügen Sie eine detaillierte Beschreibung der sichtbaren Schäden hinzu,
@@ -77,24 +79,61 @@ prompt = """
     der betroffenen Fahrzeugteile und der Art des Schadens
     (z.B. Dellen, Kratzer, gebrochene Spiegel).
 
+    9. **Anzahl der gültigen Bilder**:
+    - Geben Sie die Anzahl der Bilder an, die für die Bewertung des Schadens
+    verwendet wurden. Ungültige Bilder sollten nicht berücksichtigt werden.
+    - **Erforderlich**: Ja
+
+    10. **Anzahl der eindeutigen Fahrzeuge**:
+    - Geben Sie die Anzahl der eindeutigen Fahrzeuge an, die auf den Bildern
+    zu sehen sind. Wenn mehrere Fahrzeuge auf den Bildern sichtbar sind, geben
+    Sie die Anzahl der unterschiedlichen Fahrzeuge an.
+
+    **Beispiel**:
+    - Fahrzeug vorhanden: Ja
+    - Erkannter Schaden: Ja
+    - Vollständige Sichtbarkeit des Schadens: Ja
+    - Schweregrad des Schadens: Mittel
+    - Schadensort am Fahrzeug: Front
+    - Brandgefahr: Nein
+    - Kennzeichen: None
+    - Zusätzliche Details: Es gibt eine große Delle auf der Motorhaube und
+    einen Kratzer auf der Stoßstange.
+    - Anzahl der gültigen Bilder: 3
+    - Anzahl der eindeutigen Fahrzeuge: 1
+
+
     """
 
 
 uploaded_file = st.file_uploader(
-    "Bitte laden Sie ein " "Bild vom Schaden hoch", type=["jpg", "jpeg", "png"]
-)
+    "Bitte laden Sie ein " "Bild vom Schaden hoch", type=["jpg", "jpeg", "png"],
+    accept_multiple_files=True)
+
 
 if uploaded_file is not None:
-    st.image(uploaded_file, caption="Ihr Foto", use_column_width=True)
-    st.write("")
-    st.write("Analyisere...")
+    n_cols = (len(uploaded_file) + 3) // 4
+    cols = st.columns(n_cols)
+    for i in range(len(uploaded_file)):
+        cols[i % n_cols].image(uploaded_file[i], caption=f"Foto Nr. {i+1}",
+        use_column_width=True)
 
     # Function to encode the image
-    def encode_image(data: bytes) -> str:
+    def encode_image(data: list[bytes]) -> list[str]:
         """Encode the given image."""
-        return base64.b64encode(data).decode("utf-8")
+        return [base64.b64encode(img).decode("utf-8") for img in data]
 
-    base64_image = encode_image(uploaded_file.getvalue())
+
+
+    base64_images = encode_image([file.getvalue() for file in uploaded_file])
+    img_content = []
+    for base64_image in base64_images:
+        content = {
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+        }
+        img_content.append(content)
+
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o",
@@ -110,12 +149,8 @@ if uploaded_file is not None:
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                    },
-                ],
+                "content":
+                    img_content,
             },
         ],
         response_format=AccidentReport,
@@ -158,7 +193,7 @@ if uploaded_file is not None:
         st.write("Schadensbericht:")
 
         @st.fragment
-        def footer():
+        def fill_out_form() -> None:
 
             col1, col2 = st.columns(2)
             with col1:
@@ -174,4 +209,4 @@ if uploaded_file is not None:
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
                 ...
-        footer()
+        fill_out_form()
