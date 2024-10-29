@@ -1,67 +1,6 @@
 """Module with the response models."""
 
-from enum import Enum
-
 from pydantic import BaseModel, Field
-
-
-class DamageSeverity(str, Enum):
-    """
-    DamageSeverity is an enumeration representing different levels of damage severity.
-
-    Attributes:
-        low (str): Represents low severity damage, labeled as "tief".
-        medium (str): Represents medium severity damage, labeled as "mittel".
-        high (str): Represents high severity damage, labeled as "hoch".
-
-    """
-
-    low = "tief"
-    medium = "mittel"
-    high = "hoch"
-
-
-class DamageLocation(str, Enum):
-    """
-    An enumeration representing different locations of damage on vehicle.
-
-    Attributes:
-            front (str): Represents damage to the front of the vehicle.
-            rear (str): Represents damage to the rear of the vehicle.
-            sides (str): Represents damage to the sides of the vehicle.
-            roof (str): Represents damage to the roof of the vehicle.
-
-    """
-
-    front = "Front"
-    rear = "Heck"
-    sides = "Seiten"
-    roof = "Dach"
-
-
-class VehicleDamage(BaseModel):
-    """
-    VehicleDamage model representing the damage details of a vehicle.
-
-    Attributes:
-        fire_present (bool): Indicates if there are signs of fire on the vehicle.
-        damage_severity (DamageSeverity): Severity of the damage.
-        damage_location (list[DamageLocation]): Location of the damage on the vehicle.
-        detailed_damage_description (list[str]): Detailed description of the visible
-        damages.
-
-    """
-
-    fire_present: bool = Field(
-        ..., description="Indicates if there are signs of fire on the vehicle."
-    )
-    damage_severity: DamageSeverity = Field(..., description="Severity of the damage.")
-    damage_location: list[DamageLocation] = Field(
-        ..., description="Location of the damage on the vehicle."
-    )
-    detailed_damage_description: list[str] = Field(
-        ..., description="Detailed description of the visible damages."
-    )
 
 
 class DamageReport(BaseModel):
@@ -79,12 +18,87 @@ class DamageReport(BaseModel):
     damage_fully_visible: bool = Field(
         ..., description="Indicates if the damage is fully visible in the images."
     )
-    vehicle_damage: VehicleDamage = Field(
-        ..., description="Details of the vehicle damage."
-    )
+
     number_of_valid_images: int = Field(
         ..., description="Number of valid images used for the evaluation."
     )
     number_of_unique_vehicles: int = Field(
         ..., description="Number of unique vehicles visible in the images."
+    )
+
+    is_fire_present: bool = Field(
+        ..., description="Indicates if there are signs of fire."
+    )
+
+    is_glass_damage_present: bool = Field(
+        ..., description="Indicates if there are signs of glass damage."
+    )
+
+    frontscheibe_glass_damage: bool | None = Field(
+        None,
+        description="Indicates if there is glass damage on the front windshield.",
+        depends_on="is_glass_damage_present",
+    )
+    heckscheibe_glass_damage: bool | None = Field(
+        None,
+        description="Indicates if there is glass damage on the rear windshield.",
+        depends_on="is_glass_damage_present",
+    )
+    seitenscheibe_glass_damage: bool | None = Field(
+        None,
+        description="Indicates if there is glass damage on the side windows.",
+        depends_on="is_glass_damage_present",
+    )
+    dach_panoramafenster_glass_damage: bool | None = Field(
+        None,
+        description="Indicates if there is glass damage on the roof or panoramic "
+        "windows.",
+        depends_on="is_glass_damage_present",
+    )
+    detailed_damage_description: str = Field(
+        ..., description="Detailed description of the visible damages."
+    )
+    is_collision: bool = Field(
+        ..., description="Indicates if there are signs of a collision."
+    )
+    collision_with_object: bool | None = Field(
+        None,
+        description="Indicates if there is a collision with an object.",
+        depends_on="is_collision",
+    )
+    collision_with_car: bool | None = Field(
+        None,
+        description="Indicates if there is a collision with another car.",
+        depends_on="is_collision",
+    )
+    collision_with_animal: bool | None = Field(
+        None,
+        description="Indicates if there is a collision with an animal.",
+        depends_on="is_collision",
+    )
+    collision_other: bool | None = Field(
+        None,
+        description="Indicates if there is a collision with another object.",
+        depends_on="is_collision",
+    )
+    is_vandalism: bool = Field(
+        ..., description="Indicates if there are signs of vandalism."
+    )
+    is_theft: bool = Field(
+        ..., description="Indicates if there are signs of theft."
+    )
+    is_hail_damage: bool = Field(
+        ..., description="Indicates if there are signs of hail damage."
+    )
+    is_storm_damage: bool = Field(
+        ..., description="Indicates if there are signs of storm damage."
+    )
+    is_rockfall_damage: bool = Field(
+        ..., description="Indicates if there are signs of rockfall damage."
+    )
+    is_other_damage: bool = Field(
+        ..., description="Indicates if there are signs of other damage."
+    )
+    is_person_injured: bool = Field(
+        ..., description="Indicates if a person is injured."
     )

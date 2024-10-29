@@ -19,8 +19,7 @@ def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
         "no_damage": not final_resp.damage_recognized,
         "multiple_vehicles": final_resp.number_of_unique_vehicles > 1,
         "damage_not_visible": not final_resp.damage_fully_visible,
-        "fire_present": final_resp.vehicle_damage.fire_present,
-        "high_damage": final_resp.vehicle_damage.damage_severity == "high",
+        "fire_present": final_resp.is_fire_present,
     }
 
 
@@ -88,14 +87,8 @@ if uploaded_file:
                 st.error(message)
             st.stop()
 
-        if final_resp.vehicle_damage.fire_present:
+        if final_resp.is_fire_present:
             st.warning("Brandgefahr! Bitte entfernen Sie sich vom Fahrzeug.")
-
-        if final_resp.vehicle_damage.damage_severity == "high":
-            st.warning(
-                "Ein möglicherweise schwerwiegender Schaden wurde erkannt."
-                "Notrufnummer: 117"
-            )
 
         st.write("Schadensbericht:")
 
@@ -109,15 +102,8 @@ if uploaded_file:
                 st.text_input("E-Mail-Adresse", placeholder="Ihre E-Mail-Adresse")
                 st.text_area("Anschrift", placeholder="Ihre Anschrift")
             with col2:
-                st.text_input(
-                    "Schweregrad des Schadens",
-                    final_resp.vehicle_damage.damage_severity,
-                )
-                st.text_input(
-                    "Schadensort am Fahrzeug", final_resp.vehicle_damage.damage_location
-                )
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
-                for damage in final_resp.vehicle_damage.detailed_damage_description:
+                for damage in final_resp.detailed_damage_description:
                     st.checkbox(damage, value=True)
 
 
