@@ -59,14 +59,24 @@ if uploaded_file:
 
         final_resp = call_llm(base64_images)
         exif = ExifData(images)
-        dt = datetime.datetime.strptime(
-            exif.creation_times[0], "%Y:%m:%d %H:%M:%S"
-        ).replace(tzinfo=datetime.timezone.tzname("CET"))
 
-        map_data = {
-            "latitude": [ex[0] for ex in exif.locations],
-            "longitude": [ex[1] for ex in exif.locations],
-        }
+        if exif.creation_times:
+            try:
+                first_valid_time = next(time for time in exif.creation_times if time)
+                dt = datetime.datetime.strptime(
+                    first_valid_time, "%Y:%m:%d %H:%M:%S"
+                ).replace(tzinfo=datetime.timezone.utc)
+            except StopIteration:
+                dt = None
+
+        map_data = (
+            {
+                "latitude": [ex[0] for ex in exif.locations if ex],
+                "longitude": [ex[1] for ex in exif.locations if ex],
+            }
+            if exif.locations
+            else None
+        )
 
     st.write(final_resp)
     if not final_resp:
@@ -111,9 +121,11 @@ if uploaded_file:
                 st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
-                st.date_input("Datum", dt.date())
-                st.time_input("Uhrzeit", dt.time())
-                st.map(map_data)
+                if dt:
+                    st.date_input("Datum", dt.date())
+                    st.time_input("Uhrzeit", dt.time())
+                if map_data:
+                    st.map(map_data)
             with col2:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
 
