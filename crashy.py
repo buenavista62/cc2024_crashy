@@ -5,6 +5,7 @@ import base64
 import streamlit as st
 from openai import OpenAI
 
+from exif import ExifData
 from llm import call_llm
 from model import DamageReport
 
@@ -43,7 +44,8 @@ if uploaded_file:
             """Encode the given image."""
             return [base64.b64encode(img).decode("utf-8") for img in data]
 
-        base64_images = encode_image([file.getvalue() for file in uploaded_file])
+        images = [file.getvalue() for file in uploaded_file]
+        base64_images = encode_image(images)
         img_content = []
         for base64_image in base64_images:
             content = {
@@ -53,6 +55,9 @@ if uploaded_file:
             img_content.append(content)
 
         final_resp = call_llm(base64_images)
+        exif = ExifData(images)
+        print(exif.locations)
+        print(exif.creation_times)
 
     st.write(final_resp)
     if not final_resp:
