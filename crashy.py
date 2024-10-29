@@ -32,28 +32,29 @@ uploaded_file = st.file_uploader(
 
 
 if uploaded_file:
-    n_cols = (len(uploaded_file) + 3) // 4
-    cols = st.columns(n_cols)
-    for i in range(len(uploaded_file)):
-        cols[i % n_cols].image(
-            uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
-        )
+    with st.spinner("Analysiere Bilder..."):
+        n_cols = (len(uploaded_file) + 3) // 4
+        cols = st.columns(n_cols)
+        for i in range(len(uploaded_file)):
+            cols[i % n_cols].image(
+                uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
+            )
 
-    # Function to encode the image
-    def encode_image(data: list[bytes]) -> list[str]:
-        """Encode the given image."""
-        return [base64.b64encode(img).decode("utf-8") for img in data]
+        # Function to encode the image
+        def encode_image(data: list[bytes]) -> list[str]:
+            """Encode the given image."""
+            return [base64.b64encode(img).decode("utf-8") for img in data]
 
-    base64_images = encode_image([file.getvalue() for file in uploaded_file])
-    img_content = []
-    for base64_image in base64_images:
-        content = {
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-        }
-        img_content.append(content)
+        base64_images = encode_image([file.getvalue() for file in uploaded_file])
+        img_content = []
+        for base64_image in base64_images:
+            content = {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+            }
+            img_content.append(content)
 
-    final_resp = call_llm(base64_images)
+        final_resp = call_llm(base64_images)
 
     st.write(final_resp)
     if not final_resp:
@@ -118,6 +119,8 @@ if uploaded_file:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
                 for damage in final_resp.vehicle_damage.detailed_damage_description:
                     st.checkbox(damage, value=True)
+
+
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
                 ...
