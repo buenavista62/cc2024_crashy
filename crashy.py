@@ -1,6 +1,7 @@
 """Program to play with image LLMs."""
 
 import base64
+import datetime
 
 import streamlit as st
 from openai import OpenAI
@@ -58,8 +59,14 @@ if uploaded_file:
 
         final_resp = call_llm(base64_images)
         exif = ExifData(images)
-        print(exif.locations)
-        print(exif.creation_times)
+        dt = datetime.datetime.strptime(
+            exif.creation_times[0], "%Y:%m:%d %H:%M:%S"
+        ).replace(tzinfo=datetime.timezone.tzname("CET"))
+
+        map_data = {
+            "latitude": [ex[0] for ex in exif.locations],
+            "longitude": [ex[1] for ex in exif.locations],
+        }
 
     st.write(final_resp)
     if not final_resp:
@@ -104,10 +111,9 @@ if uploaded_file:
                 st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
-                st.text_input("Name", placeholder="Ihr Name")
-                st.text_input("Telefonnummer", placeholder="Ihre Telefonnummer")
-                st.text_input("E-Mail-Adresse", placeholder="Ihre E-Mail-Adresse")
-                st.text_area("Anschrift", placeholder="Ihre Anschrift")
+                st.date_input("Datum", dt.date())
+                st.time_input("Uhrzeit", dt.time())
+                st.map(map_data)
             with col2:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
 
