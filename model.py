@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 class DamageReport(BaseModel):
     """An accident report model."""
 
-    car_present: list[bool] = Field(
+    vehicle_present: list[bool] = Field(
         ..., description="Indicates if a vehicle is fully visible in a given image."
     )
     license_plate_number: str | None = Field(

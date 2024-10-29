@@ -17,7 +17,7 @@ st.title("Crashy App")
 def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
     """Check all conditions and return a dictionary of problems."""
     return {
-        "car_not_visible": not all(final_resp.car_present),
+        "car_not_visible": not all(final_resp.vehicle_present),
         "no_damage": not final_resp.damage_recognized,
         "multiple_vehicles": final_resp.number_of_unique_vehicles > 1,
         "damage_not_visible": not final_resp.damage_fully_visible,
@@ -91,7 +91,7 @@ if uploaded_file:
             "car_not_visible": "Auf mindestens einem Bild ist das Auto nicht sichtbar. "
             "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch. Betroffene Bilder:"
             f"{', '.join([f'Bild Nr {i+1!s}' for i, visible in
-            enumerate(final_resp.car_present) if not visible])}",
+            enumerate(final_resp.vehicle_present) if not visible])}",
             "no_damage": "Kein Schaden erkannt. Bitte laden Sie ein"
             "Bild mit sichtbarem Schaden hoch.",
             "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild."
