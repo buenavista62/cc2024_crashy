@@ -1,108 +1,27 @@
 """Program to play with image LLMs."""
 
 import base64
-from typing import Optional
 
 import streamlit as st
 from openai import OpenAI
-from pydantic import BaseModel
+
+from llm import call_llm
+from model import DamageReport
 
 client = OpenAI()
 st.title("Crashy App")
 
 
-class AccidentReport(BaseModel):
-    """An accident report model."""
-
-    car_present: bool
-    damage_recognized: bool
-    damage_fully_visible: bool
-    damage_severity: str  # 'low', 'medium', 'high'
-    damage_location: str  # z.B. 'Front', 'Heck', 'Seiten', 'Dach'
-    fire_present: bool
-    license_plate_number: Optional[str]  # noqa: UP007
-    detailed_damage_description: list[str]
-    number_of_valid_images: int
-    number_of_unique_vehicles: int
-
-
-prompt = """
-    Sie sind ein hilfreicher Assistent für Autounfälle namens "crashy". Ihre Aufgabe
-    ist es,
-    einen umfassenden Schadensbericht basierend auf den bereitgestellten Fahrzeugbildern
-    auf Deutsch zu
-    erstellen. Nutzen Sie alle bereitgestellten Bilder und fordern Sie bei Bedarf
-    zusätzliche
-    Bilder oder Details an, um eine genaue Bewertung vornehmen zu können. Beschreiben
-    Sie
-    ausschließlich die sichtbaren Schäden auf den Bildern und vermeiden Sie es,
-    zusätzliche
-    Informationen einzubeziehen.
-
-    Folgende Angaben müssen im Bericht enthalten sein:
-
-    1. **Fahrzeug vorhanden**:
-    - Bestätigen Sie, dass das Fahrzeug auf den Bildern vollständig sichtbar ist.
-    - **Erforderlich**: Ja
-
-    2. **Erkannter Schaden**:
-    - Bestätigen Sie, dass Schäden am Fahrzeug erkennbar sind.
-    - **Erforderlich**: Ja
-
-    3. **Vollständige Sichtbarkeit des Schadens**:
-    - Bestätigen Sie, dass der Schaden vollständig auf den Bildern sichtbar ist.
-    - **Erforderlich**: Ja
-
-    4. **Schweregrad des Schadens**:
-    - Bewerten Sie den Schaden als niedrig, mittel oder hoch.
-    - **Erforderlich**: Nein
-
-    5. **Schadensort am Fahrzeug**:
-    - Geben Sie an, wo sich der Schaden am Fahrzeug befindet (z.B. Front, Heck, Seiten,
-    Dach).
-    - **Erforderlich**: Nein
-
-    6. **Brandgefahr**:
-    - Bestätigen Sie, ob Anzeichen von Brand vorhanden sind (Ja/Nein).
-    - **Erforderlich**: Nein
-
-    7. **Kennzeichen**:
-    - Erfassen Sie das Kennzeichen nur, wenn es klar lesbar und vollständig
-    erkennbar ist und jedes Zeichen zu 100% sichtbar ist.
-    - Wenn das Kennzeichen nicht zu 100% sichtbar ist, geben Sie `None` an.
-    - **Erforderlich**: Nein
-
-    8. **Zusätzliche Details**:
-    - Fügen Sie eine detaillierte Beschreibung der sichtbaren Schäden hinzu,
-        einschließlich
-    der betroffenen Fahrzeugteile und der Art des Schadens
-    (z.B. Dellen, Kratzer, gebrochene Spiegel).
-
-    9. **Anzahl der gültigen Bilder**:
-    - Geben Sie die Anzahl der Bilder an, die für die Bewertung des Schadens
-    verwendet wurden. Ungültige Bilder sollten nicht berücksichtigt werden.
-    - **Erforderlich**: Ja
-
-    10. **Anzahl der eindeutigen Fahrzeuge**:
-    - Geben Sie die Anzahl der eindeutigen Fahrzeuge an, die auf den Bildern
-    zu sehen sind. Wenn mehrere Fahrzeuge auf den Bildern sichtbar sind, geben
-    Sie die Anzahl der unterschiedlichen Fahrzeuge an.
-
-    **Beispiel**:
-    - Fahrzeug vorhanden: Ja
-    - Erkannter Schaden: Ja
-    - Vollständige Sichtbarkeit des Schadens: Ja
-    - Schweregrad des Schadens: Mittel
-    - Schadensort am Fahrzeug: Front
-    - Brandgefahr: Nein
-    - Kennzeichen: None
-    - Zusätzliche Details: Es gibt eine große Delle auf der Motorhaube und
-    einen Kratzer auf der Stoßstange.
-    - Anzahl der gültigen Bilder: 3
-    - Anzahl der eindeutigen Fahrzeuge: 1
-
-
-    """
+def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
+    """Check all conditions and return a dictionary of problems."""
+    return {
+        "car_not_visible": not all(final_resp.car_present),
+        "no_damage": not final_resp.damage_recognized,
+        "multiple_vehicles": final_resp.number_of_unique_vehicles > 1,
+        "damage_not_visible": not final_resp.damage_fully_visible,
+        "fire_present": final_resp.vehicle_damage.fire_present,
+        "high_damage": final_resp.vehicle_damage.damage_severity == "high",
+    }
 
 
 uploaded_file = st.file_uploader(
@@ -134,65 +53,54 @@ if uploaded_file:
         }
         img_content.append(content)
 
-    response = client.beta.chat.completions.parse(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    },
-                ],
-            },
-            {
-                "role": "user",
-                "content": img_content,
-            },
-        ],
-        response_format=AccidentReport,
-        temperature=0.1,
-    )
+    final_resp = call_llm(base64_images)
 
-    st.write(response.choices[0].message.parsed)
-    final_resp = response.choices[0].message.parsed
+    st.write(final_resp)
     if not final_resp:
         st.write(
             "Das Bild konnte leider nicht analysiert werden. "
-            "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch."
+            "Bitte laden Sie ein neues Bild hoch"
         )
-    else:
-        if not final_resp.car_present:
-            st.write(
-                "Das Auto ist nicht sichtbar. "
-                "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch."
+    if final_resp:
+        problems = check_damage_report(final_resp)
+
+        error_messages = {
+            "car_not_visible": "Auf mindestens einem Bild ist das Auto nicht sichtbar. "
+            "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch. Betroffene Bilder:"
+            f"{', '.join([f'Bild Nr {i+1!s}' for i, visible in
+            enumerate(final_resp.car_present) if not visible])}",
+            "no_damage": "Kein Schaden erkannt. Bitte laden Sie ein"
+            "Bild mit sichtbarem Schaden hoch.",
+            "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild."
+            "Bitte laden Sie Bilder nur von einem Fahrzeug hoch.",
+            "damage_not_visible": "Schaden nicht vollständig sichtbar."
+            "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch.",
+        }
+
+        # Check if any problems exist
+        active_problems = [
+            msg for problem, msg in error_messages.items() if problems[problem]
+        ]
+
+        if active_problems:
+            for message in active_problems:
+                st.error(message)
+            st.stop()
+
+        if final_resp.vehicle_damage.fire_present:
+            st.warning("Brandgefahr! Bitte entfernen Sie sich vom Fahrzeug.")
+
+        if final_resp.vehicle_damage.damage_severity == "high":
+            st.warning(
+                "Ein möglicherweise schwerwiegender Schaden wurde erkannt."
+                "Notrufnummer: 117"
             )
-            st.stop()
-        if not final_resp.damage_recognized:
-            st.write(
-                "Kein Schaden erkannt. "
-                "Bitte laden Sie ein Bild mit sichtbarem Schaden hoch."
-            )
-            st.stop()
-        if not final_resp.damage_fully_visible:
-            st.write(
-                "Schaden nicht vollständig sichtbar. "
-                "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch."
-            )
-            st.stop()
-        if final_resp.fire_present:
-            st.warning("Brandgefahr!")
-            st.stop()
-        if final_resp.damage_severity == "high":
-            st.warning("Hoher Schaden!")
-            st.stop()
 
         st.write("Schadensbericht:")
 
         @st.fragment
         def fill_out_form() -> None:
-
+            """Fill out the damage report form."""
             col1, col2 = st.columns(2)
             with col1:
                 st.text_input("Name", placeholder="Ihr Name")
@@ -200,12 +108,18 @@ if uploaded_file:
                 st.text_input("E-Mail-Adresse", placeholder="Ihre E-Mail-Adresse")
                 st.text_area("Anschrift", placeholder="Ihre Anschrift")
             with col2:
-                st.text_input("Schweregrad des Schadens", final_resp.damage_severity)
-                st.text_input("Schadensort am Fahrzeug", final_resp.damage_location)
+                st.text_input(
+                    "Schweregrad des Schadens",
+                    final_resp.vehicle_damage.damage_severity,
+                )
+                st.text_input(
+                    "Schadensort am Fahrzeug", final_resp.vehicle_damage.damage_location
+                )
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
-                for damage in final_resp.detailed_damage_description:
+                for damage in final_resp.vehicle_damage.detailed_damage_description:
                     st.checkbox(damage, value=True)
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
                 ...
+
         fill_out_form()
