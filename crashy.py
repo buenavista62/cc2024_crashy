@@ -3,6 +3,7 @@
 import base64
 
 import streamlit as st
+
 from openai import OpenAI
 
 from llm import call_llm
@@ -28,7 +29,6 @@ uploaded_file = st.file_uploader(
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True,
 )
-
 
 if uploaded_file:
     with st.spinner("Analysiere Bilder..."):
@@ -95,6 +95,8 @@ if uploaded_file:
         @st.fragment
         def fill_out_form() -> None:
             """Fill out the damage report form."""
+            if 'damages' not in st.session_state:
+                st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
                 st.text_input("Name", placeholder="Ihr Name")
@@ -103,9 +105,23 @@ if uploaded_file:
                 st.text_area("Anschrift", placeholder="Ihre Anschrift")
             with col2:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
-                for damage in final_resp.detailed_damage_description:
-                    st.checkbox(damage, value=True)
 
+                st.write("### Aktuelle Schäden")
+                for idx, damage in enumerate(st.session_state.damages):
+                    st.checkbox(damage, value=True, key=f"damage_{idx}")
+
+                new_damage = st.text_input("Fügen Sie zusätzliche Schäden hinzu")
+
+                try:
+                    if new_damage and new_damage not in st.session_state.damages:
+                        st.session_state.damages.append(new_damage)
+                        st.toast(f"Schaden '{new_damage}' hinzugefügt.")
+                        new_damage = ""
+                        st.rerun(scope="fragment")
+
+                except ValueError as e:
+                    st.exception(e)
+                    st.error("Schaden konnte nicht hinzugefügt werden.")
 
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
