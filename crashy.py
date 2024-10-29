@@ -5,6 +5,7 @@ from typing import Optional
 
 import streamlit as st
 from openai import OpenAI
+from openai.types.chat.parsed_chat_completion import ContentType
 from pydantic import BaseModel
 
 client = OpenAI()
@@ -112,20 +113,8 @@ uploaded_file = st.file_uploader(
 )
 
 
-if uploaded_file:
-    n_cols = (len(uploaded_file) + 3) // 4
-    cols = st.columns(n_cols)
-    for i in range(len(uploaded_file)):
-        cols[i % n_cols].image(
-            uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
-        )
-
-    # Function to encode the image
-    def encode_image(data: list[bytes]) -> list[str]:
-        """Encode the given image."""
-        return [base64.b64encode(img).decode("utf-8") for img in data]
-
-    base64_images = encode_image([file.getvalue() for file in uploaded_file])
+def call_llm(base64_images: list[str]) -> ContentType | None:
+    """Call the LLM  with the list of images."""
     img_content = []
     for base64_image in base64_images:
         content = {
@@ -154,9 +143,25 @@ if uploaded_file:
         response_format=AccidentReport,
         temperature=0.1,
     )
+    return response.choices[0].message.parsed
 
-    st.write(response.choices[0].message.parsed)
-    final_resp = response.choices[0].message.parsed
+if uploaded_file:
+    n_cols = (len(uploaded_file) + 3) // 4
+    cols = st.columns(n_cols)
+    for i in range(len(uploaded_file)):
+        cols[i % n_cols].image(
+            uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
+        )
+
+    # Function to encode the image
+    def encode_image(data: list[bytes]) -> list[str]:
+        """Encode the given image."""
+        return [base64.b64encode(img).decode("utf-8") for img in data]
+
+    base64_images = encode_image([file.getvalue() for file in uploaded_file])
+    final_resp = call_llm(base64_images)
+
+    st.write(final_resp)
     if not final_resp:
         st.write(
             "Das Bild konnte leider nicht analysiert werden. "
