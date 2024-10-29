@@ -84,9 +84,7 @@ class DamageReport(BaseModel):
     is_vandalism: bool = Field(
         ..., description="Indicates if there are signs of vandalism."
     )
-    is_theft: bool = Field(
-        ..., description="Indicates if there are signs of theft."
-    )
+    is_theft: bool = Field(..., description="Indicates if there are signs of theft.")
     is_potential_hail_damage: bool = Field(
         ..., description="Indicates if there are signs of potential hail damage."
     )

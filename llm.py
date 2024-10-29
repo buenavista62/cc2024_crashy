@@ -1,4 +1,5 @@
 """Module to manage LLM calls."""
+
 from openai import OpenAI
 from openai.types.chat.parsed_chat_completion import ContentType
 
@@ -6,6 +7,7 @@ from model import DamageReport
 from prompt import prompt
 
 client = OpenAI()
+
 
 def call_llm(base64_images: list[str]) -> ContentType | None:
     """Call the LLM  with the list of images."""

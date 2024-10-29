@@ -3,7 +3,6 @@
 import base64
 
 import streamlit as st
-
 from openai import OpenAI
 
 from llm import call_llm
@@ -95,7 +94,7 @@ if uploaded_file:
         @st.fragment
         def fill_out_form() -> None:
             """Fill out the damage report form."""
-            if 'damages' not in st.session_state:
+            if "damages" not in st.session_state:
                 st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
