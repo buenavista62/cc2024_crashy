@@ -55,7 +55,7 @@ class DamageReport(BaseModel):
         "windows.",
         depends_on="is_glass_damage_present",
     )
-    detailed_damage_description: str = Field(
+    detailed_damage_description: list[str] = Field(
         ..., description="Detailed description of the visible damages."
     )
     is_collision: bool = Field(
@@ -87,14 +87,14 @@ class DamageReport(BaseModel):
     is_theft: bool = Field(
         ..., description="Indicates if there are signs of theft."
     )
-    is_hail_damage: bool = Field(
-        ..., description="Indicates if there are signs of hail damage."
+    is_potential_hail_damage: bool = Field(
+        ..., description="Indicates if there are signs of potential hail damage."
     )
-    is_storm_damage: bool = Field(
-        ..., description="Indicates if there are signs of storm damage."
+    is_potential_storm_damage: bool = Field(
+        ..., description="Indicates if there are signs of potential_storm damage."
     )
-    is_rockfall_damage: bool = Field(
-        ..., description="Indicates if there are signs of rockfall damage."
+    is_potential_rockfall_damage: bool = Field(
+        ..., description="Indicates if there are signs of potential_rockfall damage."
     )
     is_other_damage: bool = Field(
         ..., description="Indicates if there are signs of other damage."
