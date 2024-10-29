@@ -31,6 +31,8 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file:
+    if "damages" in st.session_state:
+        del st.session_state["damages"]
     with st.spinner("Analysiere Bilder..."):
         n_cols = (len(uploaded_file) + 3) // 4
         cols = st.columns(n_cols)
