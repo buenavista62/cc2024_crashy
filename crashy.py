@@ -88,8 +88,7 @@ if uploaded_file:
 
         if active_problems:
             for message in active_problems:
-                st.error(message)
-            st.stop()
+                st.warning(message)
 
         if final_resp.is_fire_present:
             st.warning("Brandgefahr! Bitte entfernen Sie sich vom Fahrzeug.")
