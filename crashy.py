@@ -21,7 +21,7 @@ class AccidentReport(BaseModel):
     damage_location: str  # z.B. 'Front', 'Heck', 'Seiten', 'Dach'
     fire_present: bool
     license_plate_number: Optional[str]  # noqa: UP007
-    detailed_damage_description: str
+    detailed_damage_description: list[str]
     number_of_valid_images: int
     number_of_unique_vehicles: int
 
@@ -203,9 +203,8 @@ if uploaded_file:
                 st.text_input("Schweregrad des Schadens", final_resp.damage_severity)
                 st.text_input("Schadensort am Fahrzeug", final_resp.damage_location)
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
-                st.text_area(
-                    "Zusätzliche Details", final_resp.detailed_damage_description
-                )
+                for damage in final_resp.detailed_damage_description:
+                    st.checkbox(damage, value=True)
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
                 ...
