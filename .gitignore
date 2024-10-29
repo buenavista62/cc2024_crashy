@@ -7,3 +7,4 @@
 .vscode
 .python-version
 *.pyc
+__pycache__
