@@ -2,7 +2,7 @@
 from openai import OpenAI
 from openai.types.chat.parsed_chat_completion import ContentType
 
-from model import AccidentReport
+from model import DamageReport
 from prompt import prompt
 
 client = OpenAI()
@@ -34,7 +34,7 @@ def call_llm(base64_images: list[str]) -> ContentType | None:
                 "content": img_content,
             },
         ],
-        response_format=AccidentReport,
+        response_format=DamageReport,
         temperature=0.1,
     )
     return response.choices[0].message.parsed
