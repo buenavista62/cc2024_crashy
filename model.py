@@ -56,7 +56,9 @@ class DamageReport(BaseModel):
         depends_on="is_glass_damage_present",
     )
     detailed_damage_description: list[str] = Field(
-        ..., description="Detailed description of the visible damages."
+        ...,
+        description="Detailed description of the visible damages. Write in a "
+        " way that is easy to understand and represents the customers view.",
     )
     is_collision: bool = Field(
         ..., description="Indicates if there are signs of a collision."
