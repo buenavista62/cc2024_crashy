@@ -41,7 +41,6 @@ if uploaded_file:
             cols[i % n_cols].image(
                 uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
             )
-        st.stop()
         # Function to encode the image
         def encode_image(data: list[bytes]) -> list[str]:
             """Encode the given image."""
