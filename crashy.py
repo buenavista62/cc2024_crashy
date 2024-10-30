@@ -42,9 +42,24 @@ transcription = audio_input()
 st.write(transcription)
 
 if transcription:
-    st.write(
-        "Vielen Dank für die Audioeingabe. Bitte laden Sie nun ein Bild vom Schaden hoch."
+    from pathlib import Path
+
+    from openai import OpenAI
+
+    client = OpenAI()
+
+    speech_file_path = Path(__file__).parent / "audio" / "speech.mp3"
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input="Viele Dank für die Audioeingabe. Bitte laden Sie nun ein Bild vom Schaden hoch.",
     )
+
+    response.stream_to_file(speech_file_path)
+
+    with speech_file_path.open("rb") as f:
+        st.audio(f, format="audio/mp3", autoplay=True)
+
     uploaded_file = st.file_uploader(
         "Bitte laden Sie ein " "Bild vom Schaden hoch",
         type=["jpg", "jpeg", "png"],
