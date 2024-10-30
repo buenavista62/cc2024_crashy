@@ -3,17 +3,14 @@
 from io import BytesIO
 
 import exifread
-from exifread.classes import IfdTag
 from exifread.utils import get_gps_coords
 
 
 class ExifData:
     """Class to handle EXIF data."""
 
-    images_tags: list[dict[str, IfdTag]] = []
-
     def __init__(self, images: list[bytes]) -> None:
-        """Intiialize the by parisng the images."""
+        """Initialize the class by parsing the passed images."""
         self.images_tags = [
             exifread.process_file(BytesIO(image), details=False) for image in images
         ]
