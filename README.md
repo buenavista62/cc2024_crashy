@@ -1,6 +1,22 @@
 # cc2024_crashy
 
 
+## Data Sets
+
+The data sets can be fetched from kaggle using the following python lines:
+
+```python
+import kagglehub
+
+path = kagglehub.dataset_download("humansintheloop/car-parts-and-car-damages")
+print("Path to dataset files:", path)
+
+path = kagglehub.dataset_download("hendrichscullen/vehide-dataset-automatic-vehicle-damage-detection")
+print("Path to dataset files:", path)
+```
+
+Typically they are cached under ~/.cache/kagglehub/
+
 ## Manipulate exif data
 Images may have embedded  [EXIF metadata](https://en.wikipedia.org/wiki/Exif). They data can be displayed:
 
