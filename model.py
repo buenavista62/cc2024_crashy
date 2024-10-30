@@ -100,3 +100,6 @@ class DamageReport(BaseModel):
     is_person_injured: bool = Field(
         ..., description="Indicates if a person is injured."
     )
+    estimated_repair_cost: int = Field(
+        ..., description="The estimated repair cost in USD."
+    )
