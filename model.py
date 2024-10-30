@@ -34,22 +34,22 @@ class DamageReport(BaseModel):
         ..., description="Indicates if there are signs of glass damage."
     )
 
-    frontscheibe_glass_damage: bool | None = Field(
+    glass_damage_front_windshield: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the front windshield.",
         depends_on="is_glass_damage_present",
     )
-    heckscheibe_glass_damage: bool | None = Field(
+    glass_damage_rear_windshield: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the rear windshield.",
         depends_on="is_glass_damage_present",
     )
-    seitenscheibe_glass_damage: bool | None = Field(
+    glass_damage_side_windows: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the side windows.",
         depends_on="is_glass_damage_present",
     )
-    dach_panoramafenster_glass_damage: bool | None = Field(
+    glass_damage_roof_or_panoramic_window: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the roof or panoramic "
         "windows.",
