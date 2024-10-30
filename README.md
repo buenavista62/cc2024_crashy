@@ -1,5 +1,18 @@
 # cc2024_crashy
 
+## Installlation
+The python streamlit application is using uv to manage the virtual environments and the installation.
+
+The following instructions work for Linux:
+```bash
+# install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# setup virtual env and install packages
+uv sync
+# run the streamlit application
+uv run streamlit run crashy.py
+```
+
 
 ## Data Sets
 
