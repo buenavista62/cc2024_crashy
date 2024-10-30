@@ -35,13 +35,13 @@ if uploaded_file:
     if "damages" in st.session_state:
         del st.session_state["damages"]
     with st.spinner("Analysiere Bilder..."):
-        n_cols = (len(uploaded_file) + 3) // 4
+        n_cols = min(4, len(uploaded_file))
         cols = st.columns(n_cols)
         for i in range(len(uploaded_file)):
             cols[i % n_cols].image(
                 uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
             )
-
+        st.stop()
         # Function to encode the image
         def encode_image(data: list[bytes]) -> list[str]:
             """Encode the given image."""
