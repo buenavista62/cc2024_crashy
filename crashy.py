@@ -92,11 +92,11 @@ if uploaded_file:
             "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch. Betroffene Bilder:"
             f"{', '.join([f'Bild Nr {i+1!s}' for i, visible in
             enumerate(final_resp.vehicle_present) if not visible])}",
-            "no_damage": "Kein Schaden erkannt. Bitte laden Sie ein"
+            "no_damage": "Es wurde kein Schaden erkannt. Bitte laden Sie ein "
             "Bild mit sichtbarem Schaden hoch.",
-            "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild."
+            "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild. "
             "Bitte laden Sie Bilder nur von einem Fahrzeug hoch.",
-            "damage_not_visible": "Schaden nicht vollständig sichtbar."
+            "damage_not_visible": "Der Schaden ist nicht vollständig sichtbar. "
             "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch.",
         }
 
