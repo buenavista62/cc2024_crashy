@@ -121,12 +121,6 @@ if uploaded_file:
                 st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
-                if dt:
-                    st.date_input("Datum", dt.date())
-                    st.time_input("Uhrzeit", dt.time())
-                if map_data:
-                    st.map(map_data)
-            with col2:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
 
                 st.write("### Aktuelle Schäden")
@@ -145,6 +139,12 @@ if uploaded_file:
                 except ValueError as e:
                     st.exception(e)
                     st.error("Schaden konnte nicht hinzugefügt werden.")
+            with col2:
+                if dt:
+                    st.date_input("Datum", dt.date())
+                    st.time_input("Uhrzeit", dt.time())
+                if map_data:
+                    st.map(map_data)
 
             st.write("Bitte überprüfen Sie die Angaben.")
             if st.button("Schaden melden"):
