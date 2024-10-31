@@ -39,7 +39,7 @@ Crashy can be build to run in a ccontainer.
 # build the container image
 docker build -t crashy .
 # run the container supposing openai secret is in .secret-openai
-docker run --rm -e OPENAI_API_KEY=$$(cat .secret-openai) -p 8501:8501 crashy
+docker run --rm -e OPENAI_API_KEY=$(cat .secret-openai) -p 8501:8501 crashy
 # open the browser to interact with crashy
 open http://localhost:8501
 ```
