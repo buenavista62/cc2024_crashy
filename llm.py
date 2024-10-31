@@ -53,6 +53,6 @@ def call_llm(
             },
         ],
         response_format=DamageReport,
-        temperature=0.1,
+        temperature=0.0,
     )
     return response.choices[0].message.parsed

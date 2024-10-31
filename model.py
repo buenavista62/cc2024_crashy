@@ -53,8 +53,8 @@ class DamageReport(BaseModel):
     )
     detailed_damage_description: list[str] = Field(
         ...,
-        description="Detailed description of the visible damages. Write in a "
-        " way that is easy to understand and represents the customers view.",
+        description="Detailed description of the visible damages. "
+        "Written as if a customer would provide to their insurance company.",
     )
     is_collision: bool = Field(
         ..., description="Indicates if there are signs of a collision."
