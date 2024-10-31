@@ -37,23 +37,19 @@ class DamageReport(BaseModel):
     glass_damage_front_windshield: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the front windshield.",
-
     )
     glass_damage_rear_windshield: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the rear windshield.",
-
     )
     glass_damage_side_windows: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the side windows.",
-
     )
     glass_damage_roof_or_panoramic_window: bool | None = Field(
         None,
         description="Indicates if there is glass damage on the roof or panoramic "
         "windows.",
-
     )
     detailed_damage_description: list[str] = Field(
         ...,
@@ -66,22 +62,18 @@ class DamageReport(BaseModel):
     collision_with_object: bool | None = Field(
         None,
         description="Indicates if there is a collision with an object.",
-
     )
     collision_with_car: bool | None = Field(
         None,
         description="Indicates if there is a collision with another car.",
-
     )
     collision_with_animal: bool | None = Field(
         None,
         description="Indicates if there is a collision with an animal.",
-
     )
     collision_other: bool | None = Field(
         None,
         description="Indicates if there is a collision with another object.",
-
     )
     is_vandalism: bool = Field(
         ..., description="Indicates if there are signs of vandalism."
