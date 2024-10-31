@@ -15,7 +15,7 @@ from model import DamageReport
 client = OpenAI()
 st.title("Crashy")
 
-st.write("## Dein digitaler Schadenmelder.")
+st.write("## Dein digitaler Schadenmelder")
 st.write(
     "Bitte erzähle uns vom Vorfall und lade Bilder hoch, um den Schaden zu melden."
 )
@@ -60,7 +60,7 @@ with col_audio:
         transcription = audio_input(audio_value)
     try:
         if transcription:
-            st.text_area(label="Das ist passiert:", value=transcription)
+            st.write(transcription)
     except NameError:
         pass
 
@@ -170,6 +170,12 @@ if "start_button" in locals() and start_button:
                 st.session_state.damages = final_resp.detailed_damage_description.copy()
             col1, col2 = st.columns(2)
             with col1:
+                try:
+                    if transcription:
+                        st.text_area(label="Das ist passiert:", value=transcription)
+                except NameError:
+                    st.text_area(label="Das ist passiert:", value="")
+
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
                 estimated_repair_cost = final_resp.estimated_repair_cost * 2.5
                 st.write(f"Kostenschätzung: {estimated_repair_cost:.2f} CHF")
