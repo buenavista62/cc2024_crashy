@@ -13,9 +13,9 @@ from llm import call_llm, call_transcription
 from model import DamageReport
 
 client = OpenAI()
-st.title("Crashy App")
+st.title("Crashy")
 
-st.write("## Ich bin Crashy, dein digitaler Schadenmelder.")
+st.write("## Dein digitaler Schadenmelder.")
 st.write(
     "Bitte erzähle uns vom Vorfall und lade Bilder hoch, um den Schaden zu melden."
 )

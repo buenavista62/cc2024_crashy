@@ -1,5 +1,23 @@
 # cc2024_crashy
 
+## Introduction
+This repository contains a streamlit application to automatically fill out damage reports. 
+
+## Project Diagram
+
+```mermaid
+graph TD;
+    A[User] -->|uploads image| B[Streamlit App]
+    A[User] -->|records incident| B
+    B -->|processes image| C[GPT-4o]
+    B -->|processes audio| D[Whisper-2]
+    D -->|translation/transcription| C
+    D -->|extracts information| B
+    C -->|extracts information| E[Response Model]
+    E -->|fills damage report| B
+    B -->|displays results| A
+```
+
 ## Installlation
 The python streamlit application is using uv to manage the virtual environments and the installation.
 
