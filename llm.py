@@ -20,9 +20,14 @@ def call_transcription(audio_file: io.BytesIO) -> str:
     return translation.text
 
 
-def call_llm(audio_transcript: str, base64_images: list[str]) -> ContentType | None:
+def call_llm(
+    audio_transcript: str | None, base64_images: list[str]
+) -> ContentType | None:
     """Call the LLM  with the list of images."""
-    user_input = [{"type": "text", "text": audio_transcript}]
+    if not audio_transcript:
+        user_input = []
+    else:
+        user_input = [{"type": "text", "text": "<Record>: " + audio_transcript}]
     for base64_image in base64_images:
         content = {
             "type": "image_url",

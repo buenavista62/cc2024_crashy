@@ -47,7 +47,10 @@ def audio_input(audio_value: UploadedFile | None) -> str | None:
 col_audio, col_image = st.columns(2)
 
 with col_audio:
-    audio_value = st.experimental_audio_input("Was ist passiert?")
+    if st.checkbox("Selber sprechen", value=True):
+        audio_value = st.experimental_audio_input("Was ist passiert?")
+    else:
+        audio_value = st.file_uploader("Audio hochladen", type=["wav", "mp3"])
     if audio_value:
         transcription = audio_input(audio_value)
     if "transcription" in locals() and transcription:
