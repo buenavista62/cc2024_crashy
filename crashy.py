@@ -53,8 +53,11 @@ with col_audio:
         audio_value = st.file_uploader("Audio hochladen", type=["wav", "mp3"])
     if audio_value:
         transcription = audio_input(audio_value)
-    if "transcription" in locals() and transcription:
-        st.text_area(label="Das ist passiert:", value=transcription)
+    try:
+        if transcription:
+            st.text_area(label="Das ist passiert:", value=transcription)
+    except NameError:
+        pass
 
 with col_image:
     uploaded_file = st.file_uploader(
@@ -94,7 +97,13 @@ if "start_button" in locals() and start_button:
             }
             img_content.append(content)
 
-        final_resp = call_llm(transcription, base64_images)
+        try:
+            audio_str = transcription
+        except NameError:
+            audio_str = None
+
+        final_resp = call_llm(audio_str, base64_images)
+
         exif = ExifData(images)
 
         if exif.creation_times:
@@ -159,6 +168,8 @@ if "start_button" in locals() and start_button:
             col1, col2 = st.columns(2)
             with col1:
                 st.text_input("Kennzeichen", final_resp.license_plate_number)
+                estimated_repair_cost = final_resp.estimated_repair_cost * 2.5
+                st.write(f"Kostenschätzung: {estimated_repair_cost:.2f} CHF")
 
                 st.write("### Aktuelle Schäden")
                 for idx, damage in enumerate(st.session_state.damages):
