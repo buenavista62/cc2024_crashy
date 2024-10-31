@@ -31,7 +31,7 @@ uv sync
 uv run streamlit run crashy.py
 ```
 
-## Container$
+## Container
 
 Crashy can be build to run in a ccontainer.
 
