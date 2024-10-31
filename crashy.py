@@ -44,10 +44,15 @@ def audio_input(audio_value: UploadedFile | None) -> str | None:
     return None
 
 
+col_toggle, _ = st.columns(2)
+
+with col_toggle:
+    self_speak = st.toggle("Selber sprechen", value=True)
 col_audio, col_image = st.columns(2)
 
+
 with col_audio:
-    if st.checkbox("Selber sprechen", value=True):
+    if self_speak:
         audio_value = st.experimental_audio_input("Was ist passiert?")
     else:
         audio_value = st.file_uploader("Audio hochladen", type=["wav", "mp3"])
@@ -66,16 +71,14 @@ with col_image:
         accept_multiple_files=True,
     )
 
-start_analysis = st.empty()
-
 if uploaded_file:
-    start_button = start_analysis.button("Analyse starten")
     n_cols = min(4, len(uploaded_file))
     cols = st.columns(n_cols)
     for i in range(len(uploaded_file)):
         cols[i % n_cols].image(
             uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
         )
+    start_button = st.button("Analyse starten")
 
 
 if "start_button" in locals() and start_button:
