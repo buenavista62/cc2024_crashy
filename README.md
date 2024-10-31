@@ -9,13 +9,13 @@ This repository contains a streamlit application to automatically fill out damag
 graph TD;
     A[User] -->|uploads image| B[Streamlit App]
     A[User] -->|records incident| B
-    B -->|processes image| C[GPT-4o]
-    B -->|processes audio| D[Whisper-2]
-    D -->|translation/transcription| C
-    D -->|extracts information| B
-    C -->|extracts information| E[Response Model]
-    E -->|fills damage report| B
-    B -->|displays results| A
+    B -->|processed image| C[GPT-4o]
+    B -->|processed audio| D[Whisper-2]
+    D -->|translation| C
+    D -->|translation| B
+    C -->|extracted information| E[Response Model]
+    E -->|damage report| B
+    B -->|displays damage report| A
 ```
 
 ## Installlation
