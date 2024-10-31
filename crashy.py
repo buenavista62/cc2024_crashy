@@ -6,6 +6,7 @@ import io
 
 import streamlit as st
 from openai import OpenAI
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from exif import ExifData
 from llm import call_llm, call_transcription
@@ -13,6 +14,11 @@ from model import DamageReport
 
 client = OpenAI()
 st.title("Crashy App")
+
+st.write("## Ich bin Crashy, dein digitaler Schadenmelder.")
+st.write(
+    "Bitte erzähle uns vom Vorfall und lade Bilder hoch, um den Schaden zu melden."
+)
 
 
 def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
@@ -26,9 +32,9 @@ def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
     }
 
 
-def audio_input() -> str | None:
+@st.cache_data(show_spinner="Aufzeichnung wird verarbeitet...")
+def audio_input(audio_value: UploadedFile | None) -> str | None:
     """Capture audio input and return its transcription."""
-    audio_value = st.experimental_audio_input("Was ist passiert?")
     if audio_value:
         audio_bytes = audio_value.read()
         audio_file = io.BytesIO(audio_bytes)
@@ -38,155 +44,144 @@ def audio_input() -> str | None:
     return None
 
 
-transcription = audio_input()
-st.write(transcription)
+col_audio, col_image = st.columns(2)
 
-if transcription:
-    from pathlib import Path
+with col_audio:
+    audio_value = st.experimental_audio_input("Was ist passiert?")
+    if audio_value:
+        transcription = audio_input(audio_value)
+    if "transcription" in locals() and transcription:
+        st.text_area(label="Das ist passiert:", value=transcription)
 
-    from openai import OpenAI
-
-    client = OpenAI()
-
-    speech_file_path = Path(__file__).parent / "audio" / "speech.mp3"
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input="Viele Dank für die Audioeingabe. Bitte laden Sie nun ein Bild vom Schaden hoch.",
-    )
-
-    response.stream_to_file(speech_file_path)
-
-    with speech_file_path.open("rb") as f:
-        st.audio(f, format="audio/mp3", autoplay=True)
-
+with col_image:
     uploaded_file = st.file_uploader(
-        "Bitte laden Sie ein " "Bild vom Schaden hoch",
+        "Bilder hochladen",
         type=["jpg", "jpeg", "png"],
         accept_multiple_files=True,
     )
 
-    if uploaded_file:
-        if "damages" in st.session_state:
-            del st.session_state["damages"]
-        with st.spinner("Analysiere Bilder..."):
-            n_cols = min(4, len(uploaded_file))
-            cols = st.columns(n_cols)
-            for i in range(len(uploaded_file)):
-                cols[i % n_cols].image(
-                    uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
-                )
+start_analysis = st.empty()
 
-            # Function to encode the image
-            def encode_image(data: list[bytes]) -> list[str]:
-                """Encode the given image."""
-                return [base64.b64encode(img).decode("utf-8") for img in data]
+if uploaded_file:
+    start_button = start_analysis.button("Analyse starten")
+    n_cols = min(4, len(uploaded_file))
+    cols = st.columns(n_cols)
+    for i in range(len(uploaded_file)):
+        cols[i % n_cols].image(
+            uploaded_file[i], caption=f"Foto Nr. {i+1}", use_column_width=True
+        )
 
-            images = [file.getvalue() for file in uploaded_file]
-            base64_images = encode_image(images)
-            img_content = []
-            for base64_image in base64_images:
-                content = {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                }
-                img_content.append(content)
 
-            final_resp = call_llm(transcription, base64_images)
-            exif = ExifData(images)
+if "start_button" in locals() and start_button:
+    if "damages" in st.session_state:
+        del st.session_state["damages"]
+    with st.spinner("Analysiere Bilder..."):
 
-            if exif.creation_times:
-                try:
-                    first_valid_time = next(
-                        time for time in exif.creation_times if time
-                    )
-                    dt = datetime.datetime.strptime(
-                        first_valid_time, "%Y:%m:%d %H:%M:%S"
-                    ).replace(tzinfo=datetime.timezone.utc)
-                except StopIteration:
-                    dt = None
+        def encode_image(data: list[bytes]) -> list[str]:
+            """Encode the given image."""
+            return [base64.b64encode(img).decode("utf-8") for img in data]
 
-            map_data = (
-                {
-                    "latitude": [ex[0] for ex in exif.locations if ex],
-                    "longitude": [ex[1] for ex in exif.locations if ex],
-                }
-                if exif.locations
-                else None
-            )
-
-        st.write(final_resp)
-        if not final_resp:
-            st.write(
-                "Das Bild konnte leider nicht analysiert werden. "
-                "Bitte laden Sie ein neues Bild hoch"
-            )
-        if final_resp:
-            problems = check_damage_report(final_resp)
-
-            error_messages = {
-                "car_not_visible": "Auf mindestens einem Bild ist das Auto nicht sichtbar. "
-                "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch. Betroffene Bilder:"
-                f"{', '.join([f'Bild Nr {i+1!s}' for i, visible in
-                enumerate(final_resp.vehicle_present) if not visible])}",
-                "no_damage": "Es wurde kein Schaden erkannt. Bitte laden Sie ein "
-                "Bild mit sichtbarem Schaden hoch.",
-                "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild. "
-                "Bitte laden Sie Bilder nur von einem Fahrzeug hoch.",
-                "damage_not_visible": "Der Schaden ist nicht vollständig sichtbar. "
-                "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch.",
+        images = [file.getvalue() for file in uploaded_file]
+        base64_images = encode_image(images)
+        img_content = []
+        for base64_image in base64_images:
+            content = {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
             }
+            img_content.append(content)
 
-            # Check if any problems exist
-            active_problems = [
-                msg for problem, msg in error_messages.items() if problems[problem]
-            ]
+        final_resp = call_llm(transcription, base64_images)
+        exif = ExifData(images)
 
-            if active_problems:
-                for message in active_problems:
-                    st.warning(message)
+        if exif.creation_times:
+            try:
+                first_valid_time = next(time for time in exif.creation_times if time)
+                dt = datetime.datetime.strptime(
+                    first_valid_time, "%Y:%m:%d %H:%M:%S"
+                ).replace(tzinfo=datetime.timezone.utc)
+            except StopIteration:
+                dt = None
 
-            if final_resp.is_fire_present:
-                st.warning("Brandgefahr! Bitte entfernen Sie sich vom Fahrzeug.")
+        map_data = (
+            {
+                "latitude": [ex[0] for ex in exif.locations if ex],
+                "longitude": [ex[1] for ex in exif.locations if ex],
+            }
+            if exif.locations
+            else None
+        )
 
-            st.write("Schadensbericht:")
+    st.json(final_resp, expanded=False)
+    if not final_resp:
+        st.write(
+            "Das Bild konnte leider nicht analysiert werden. "
+            "Bitte laden Sie ein neues Bild hoch"
+        )
+    if final_resp:
+        problems = check_damage_report(final_resp)
 
-            @st.fragment
-            def fill_out_form() -> None:
-                """Fill out the damage report form."""
-                if "damages" not in st.session_state:
-                    st.session_state.damages = (
-                        final_resp.detailed_damage_description.copy()
-                    )
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.text_input("Kennzeichen", final_resp.license_plate_number)
+        error_messages = {
+            "car_not_visible": "Auf mindestens einem Bild ist das Auto nicht sichtbar. "
+            "Bitte laden Sie ein Bild vom gesamten Fahrzeug hoch. Betroffene Bilder:"
+            f"{', '.join([f'Bild Nr {i+1!s}' for i, visible in
+            enumerate(final_resp.vehicle_present) if not visible])}",
+            "no_damage": "Es wurde kein Schaden erkannt. Bitte laden Sie ein "
+            "Bild mit sichtbarem Schaden hoch.",
+            "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild. "
+            "Bitte laden Sie Bilder nur von einem Fahrzeug hoch.",
+            "damage_not_visible": "Der Schaden ist nicht vollständig sichtbar. "
+            "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch.",
+        }
 
-                    st.write("### Aktuelle Schäden")
-                    for idx, damage in enumerate(st.session_state.damages):
-                        st.checkbox(damage, value=True, key=f"damage_{idx}")
+        # Check if any problems exist
+        active_problems = [
+            msg for problem, msg in error_messages.items() if problems[problem]
+        ]
 
-                    new_damage = st.text_input("Fügen Sie zusätzliche Schäden hinzu")
+        if active_problems:
+            for message in active_problems:
+                st.warning(message)
 
-                    try:
-                        if new_damage and new_damage not in st.session_state.damages:
-                            st.session_state.damages.append(new_damage)
-                            st.toast(f"Schaden '{new_damage}' hinzugefügt.")
-                            new_damage = ""
-                            st.rerun(scope="fragment")
+        if final_resp.is_fire_present:
+            st.warning("Brandgefahr! Bitte entfernen Sie sich vom Fahrzeug.")
 
-                    except ValueError as e:
-                        st.exception(e)
-                        st.error("Schaden konnte nicht hinzugefügt werden.")
-                with col2:
-                    if dt:
-                        st.date_input("Datum", dt.date())
-                        st.time_input("Uhrzeit", dt.time())
-                    if map_data:
-                        st.map(map_data)
+        st.write("Schadensbericht:")
 
-                st.write("Bitte überprüfen Sie die Angaben.")
-                if st.button("Schaden melden"):
-                    ...
+        @st.fragment
+        def fill_out_form() -> None:
+            """Fill out the damage report form."""
+            if "damages" not in st.session_state:
+                st.session_state.damages = final_resp.detailed_damage_description.copy()
+            col1, col2 = st.columns(2)
+            with col1:
+                st.text_input("Kennzeichen", final_resp.license_plate_number)
 
-            fill_out_form()
+                st.write("### Aktuelle Schäden")
+                for idx, damage in enumerate(st.session_state.damages):
+                    st.checkbox(damage, value=True, key=f"damage_{idx}")
+
+                new_damage = st.text_input("Fügen Sie zusätzliche Schäden hinzu")
+
+                try:
+                    if new_damage and new_damage not in st.session_state.damages:
+                        st.session_state.damages.append(new_damage)
+                        st.toast(f"Schaden '{new_damage}' hinzugefügt.")
+                        new_damage = ""
+                        st.rerun(scope="fragment")
+
+                except ValueError as e:
+                    st.exception(e)
+                    st.error("Schaden konnte nicht hinzugefügt werden.")
+            with col2:
+                if dt:
+                    st.date_input("Datum", dt.date())
+                    st.time_input("Uhrzeit", dt.time())
+                if map_data:
+                    st.map(map_data)
+
+            st.write("Bitte überprüfen Sie die Angaben.")
+            if st.button("Schaden melden"):
+                ...
+
+        fill_out_form()
