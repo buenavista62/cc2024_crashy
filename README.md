@@ -82,5 +82,5 @@ cd doc
 wget https://github.com/yusukebe/revealgo/releases/download/v1.2.2/revealgo_1.2.2_Linux-64bit.tar.gz
 tar xvfz revealgo_1.2.2_Linux-64bit.tar.gz
 chmod +x revealgo
-./revealgo
+./revealgo  slides.md --theme=simple
 ```
