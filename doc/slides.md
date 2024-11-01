@@ -22,7 +22,7 @@ Codecamp 2024 - Sercan, Patrick
 ## Demo
 - case 1: accident with an animal
 - case 2: car radio theft
-- case 3: scratched car surface
+- case 3: minor car damage
 
 ---
 
