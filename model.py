@@ -34,45 +34,46 @@ class DamageReport(BaseModel):
         ..., description="Indicates if there are signs of glass damage."
     )
 
-    glass_damage_front_windshield: bool | None = Field(
-        None,
+    glass_damage_front_windshield: bool = Field(
+        ...,
         description="Indicates if there is glass damage on the front windshield.",
     )
-    glass_damage_rear_windshield: bool | None = Field(
-        None,
+    glass_damage_rear_windshield: bool = Field(
+        ...,
         description="Indicates if there is glass damage on the rear windshield.",
     )
-    glass_damage_side_windows: bool | None = Field(
-        None,
+    glass_damage_side_windows: bool = Field(
+        ...,
         description="Indicates if there is glass damage on the side windows.",
     )
-    glass_damage_roof_or_panoramic_window: bool | None = Field(
-        None,
+    glass_damage_roof_or_panoramic_window: bool = Field(
+        ...,
         description="Indicates if there is glass damage on the roof or panoramic "
         "windows.",
     )
     detailed_damage_description: list[str] = Field(
         ...,
         description="Detailed description of the visible damages. "
-        "Written as if a customer would provide to their insurance company.",
+        "Written as if a customer would provide to their insurance company."
+        "Each damage should be a separate string.",
     )
     is_collision: bool = Field(
         ..., description="Indicates if there are signs of a collision."
     )
-    collision_with_object: bool | None = Field(
-        None,
+    collision_with_object: bool = Field(
+        ...,
         description="Indicates if there is a collision with an object.",
     )
-    collision_with_car: bool | None = Field(
-        None,
+    collision_with_car: bool = Field(
+        ...,
         description="Indicates if there is a collision with another car.",
     )
-    collision_with_animal: bool | None = Field(
-        None,
+    collision_with_animal: bool = Field(
+        ...,
         description="Indicates if there is a collision with an animal.",
     )
-    collision_other: bool | None = Field(
-        None,
+    collision_other: bool = Field(
+        ...,
         description="Indicates if there is a collision with another object.",
     )
     is_vandalism: bool = Field(

@@ -27,8 +27,9 @@ def check_damage_report(final_resp: DamageReport) -> dict[str, bool]:
         "car_not_visible": not all(final_resp.vehicle_present),
         "no_damage": not final_resp.damage_recognized,
         "multiple_vehicles": final_resp.number_of_unique_vehicles > 1,
-        "damage_not_visible": not final_resp.damage_fully_visible,
         "fire_present": final_resp.is_fire_present,
+        "collision_with_animal": final_resp.collision_with_animal,
+        "is_theft": final_resp.is_theft,
     }
 
 
@@ -145,8 +146,10 @@ if "start_button" in locals() and start_button:
             "Bild mit sichtbarem Schaden hoch.",
             "multiple_vehicles": "Mehrere Fahrzeuge auf dem Bild. "
             "Bitte laden Sie Bilder nur von einem Fahrzeug hoch.",
-            "damage_not_visible": "Der Schaden ist nicht vollständig sichtbar. "
-            "Bitte laden Sie ein Bild mit vollständig sichtbarem Schaden hoch.",
+            "fire_present": "Brandgefahr erkannt. Bitte entfernen Sie sich "
+            "vom Fahrzeug.",
+            "collision_with_animal": "Kollision mit einem Tier erkannt. ",
+            "is_theft": "Diebstahl erkannt.",
         }
 
         # Check if any problems exist
