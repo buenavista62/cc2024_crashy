@@ -73,3 +73,14 @@ exiftool -DateTimeOriginal="2020:01:01 06:06:06+01:00" <path_to_image>
 # manipulate geolocation
 exiftool -GPSLatitude*=47.54943851265131 -GPSLongitude*=7.593584082607474 -GPSAltitude*=277 <path_to_image>
 ```
+
+## Presentation
+### Setup
+for Linux
+```bash
+cd doc
+wget https://github.com/yusukebe/revealgo/releases/download/v1.2.2/revealgo_1.2.2_Linux-64bit.tar.gz
+tar xvfz revealgo_1.2.2_Linux-64bit.tar.gz
+chmod +x revealgo
+./revealgo
+```
